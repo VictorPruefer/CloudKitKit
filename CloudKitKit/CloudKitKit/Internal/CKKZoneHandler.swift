@@ -60,7 +60,7 @@ internal extension CKKZoneHandler {
     ///   - database: The database of the affected zones
     ///   - completionHandler: The completion handler to be called after handling all changes
     func fetchChangesInZones(zoneIDs: [CKRecordZone.ID], database: CKDatabase.Scope, completionHandler: @escaping () -> Void) {
-        CKKDebugging.debuggingCrumble(statement: "Fetch changes in \(zoneIDs.count) zones", sender: self)
+        CKKDebugging.debuggingCrumble(statement: "Fetch changes in \(zoneIDs.count) zones in \(database)", sender: self)
         
         // Only continue if there is at least one affected zone
         guard !zoneIDs.isEmpty else {
@@ -80,26 +80,36 @@ internal extension CKKZoneHandler {
             optionsForZones[$0] = options
         })
         
+        // Create an operation to fetch all changes in given zones
         let fetchZoneChangesOperation: CKFetchRecordZoneChangesOperation = {
             let operation = CKFetchRecordZoneChangesOperation(recordZoneIDs: zoneIDs, configurationsByRecordZoneID: optionsForZones)
             
             operation.fetchAllChanges = true
             operation.qualityOfService = .utility
             operation.recordChangedBlock = { record in
-                // TO BE DONE
+                recordsToSave.append(record)
             }
             operation.recordWithIDWasDeletedBlock = { recordID, recordType in
-                // TO BE DONE
+                recordsToDelete.append((recordID, recordType))
             }
             operation.recordZoneChangeTokensUpdatedBlock = { recordZoneID, newToken, recentClientToken in
                 // We now have a new change token locally, cache it without saving
                 CKKTokenHandler.shared.saveNewToken(newToken: newToken, scope: .zone(zoneID: recordZoneID), commit: false)
             }
-            operation.recordZoneFetchCompletionBlock = { recordZoneID, newTOken, _, moreComing, error in
-                // TO BE DONE
+            operation.recordZoneFetchCompletionBlock = { recordZoneID, newToken, _, moreComing, error in
+                if let error = error {
+                    CKKDebugging.debuggingCrumble(statement: error.localizedDescription, sender: self)
+                    return
+                }
+                // TODO: Handle changes, if completion successful -> Store new token
+                let zoneChanges = recordsToSave.filter({ $0.recordID.zoneID == recordZoneID })
             }
             operation.fetchRecordZoneChangesCompletionBlock = { error in
-                // TO BE DONE
+                if let error = error {
+                    CKKDebugging.debuggingCrumble(statement: error.localizedDescription, sender: self)
+                    return
+                }
+                completionHandler()
             }
             
             return operation

@@ -90,57 +90,45 @@ extension CKKManager {
         // Get currently saved change token of this device
         let currentChangeToken = CKKTokenHandler.shared.getLatestToken(for: .database(scope: database))
         
-        // Record zone IDs to fetch updates for
-        var affectedZoneIDs = [CKRecordZone.ID]()
+        // Record zone IDs to fetch updates for; use a set to avoid duplicates
+        var affectedZoneIDs = Set<CKRecordZone.ID>()
         
-        let temp: CKFetchDatabaseChangesOperation = {
+        // Create an operation to fetch all changes that occurred since the previous change token
+        let fetchChangesOp: CKFetchDatabaseChangesOperation = {
             let operation = CKFetchDatabaseChangesOperation(previousServerChangeToken: currentChangeToken)
             
             operation.fetchAllChanges = true
             operation.recordZoneWithIDChangedBlock = { zoneID in
-                affectedZoneIDs.append(zoneID)
+                affectedZoneIDs.insert(zoneID)
             }
             operation.recordZoneWithIDWasDeletedBlock = { zoneID in
-                // TO BE DONE
+                // TODO: Handle deleted zones
             }
-            // TO BE DONE: Purging
             operation.changeTokenUpdatedBlock = { newToken in
                 // We now have a new change token locally, cache it without saving
                 CKKTokenHandler.shared.saveNewToken(newToken: newToken, scope: .database(scope: database), commit: false)
+            }
+            operation.fetchDatabaseChangesCompletionBlock = { newToken, more, error in
+                // Will be executed when the fetch changes operation completed
+                if let error = error {
+                    // TODO: Check if error is CKErrorChangeTokenExpired, in this case reset the cached token
+                    print(error.localizedDescription)
+                    return
+                }
+                
+                // Fetch changes in zones that are affected
+                
+                CKKZoneHandler.shared.fetchChangesInZones(zoneIDs: Array(affectedZoneIDs), database: database, completionHandler: {
+                    // Now that we have fetched the changes, cache the new change token of the database
+                    CKKTokenHandler.shared.saveNewToken(newToken: newToken, scope: .database(scope: database), commit: true)
+                    completionHandler?()
+                })
             }
             
             return operation
         }()
         
-        // Create an operation to fetch all changes that occurred since the previous change token
-        let fetchChangesOp = CKFetchDatabaseChangesOperation(previousServerChangeToken: currentChangeToken)
-        fetchChangesOp.fetchAllChanges = true
-        fetchChangesOp.recordZoneWithIDChangedBlock = { zoneID in
-            affectedZoneIDs.append(zoneID)
-        }
-        fetchChangesOp.recordZoneWithIDWasDeletedBlock = { zoneID in
-            // Delete that zone from the local database
-            // TODO
-        }
-        fetchChangesOp.changeTokenUpdatedBlock = { newToken in
-            // We now have a new change token locally, cache it without saving
-            CKKTokenHandler.shared.saveNewToken(newToken: newToken, scope: .database(scope: database), commit: false)
-        }
-        fetchChangesOp.fetchDatabaseChangesCompletionBlock = { newToken, more, error in
-            // Will be executed when the fetch changes operation completed
-            if let error = error {
-                // TODO: Check if error is CKErrorChangeTokenExpired, in this case reset the cached token
-                print(error.localizedDescription)
-                return
-            }
-            
-            // Fetch changes in zones that are affected
-            self.fetchChangesInZones(zoneIDs: affectedZoneIDs, database: .private, completionHandler: {
-                // Now that we have fetched the changes, cache the new change token of the database
-                TokenHandler.saveNewChangeToken(newToken: newToken, scope: .database(scope: .private))
-                callback()
-            })
-        }
+        
         container.database(with: database).add(fetchChangesOp)
     }
     

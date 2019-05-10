@@ -23,7 +23,7 @@ internal class CKKTokenHandler {
     // MARK: - Instance members
     
     /// New token that has not been committed yet
-    private var uncommittedToken: [(CKKTokenScope, CKServerChangeToken)] = []
+    private var uncommittedToken: [(CKKTokenScope, CKServerChangeToken?)] = []
     
 }
 
@@ -43,7 +43,7 @@ extension CKKTokenHandler {
     /// - Parameters:
     ///   - newToken: The new token that wants to be saved
     ///   - commit: ```true```, if the token should immediately be stored persistently. ```false```, if the token should only be cached temporarily.
-    func saveNewToken(newToken: CKServerChangeToken, scope: CKKTokenScope, commit: Bool) {
+    func saveNewToken(newToken: CKServerChangeToken?, scope: CKKTokenScope, commit: Bool) {
         // Since we want to store a new token, delete the previous one first
         if let existingIndex = uncommittedToken.firstIndex(where: { $0.0.key == scope.key }) {
             uncommittedToken.remove(at: existingIndex)
@@ -58,11 +58,15 @@ extension CKKTokenHandler {
     
     /// Stores a temporarily cached token persistently, if there is one.
     func commitToken(scope: CKKTokenScope) {
-        if let tokenToCommit = uncommittedToken.first(where: { $0.0.key == scope.key }),
-            let changeTokenData = try? NSKeyedArchiver.archivedData(withRootObject: tokenToCommit, requiringSecureCoding: true) {
-            UserDefaults.standard.set(changeTokenData, forKey: scope.key)
-            CKKDebugging.debuggingCrumble(statement: "Commit new token (\(tokenToCommit)) for scope: \(scope.key)", sender: self)
+        guard let tokenToCommit = uncommittedToken.first(where: { $0.0.key == scope.key }) else {
+            return
         }
+        if tokenToCommit.1 == nil {
+            UserDefaults.standard.set(nil, forKey: scope.key)
+        } else if let changeTokenData = try? NSKeyedArchiver.archivedData(withRootObject: tokenToCommit, requiringSecureCoding: true) {
+            UserDefaults.standard.set(changeTokenData, forKey: scope.key)
+        }
+        CKKDebugging.debuggingCrumble(statement: "Commit new token (\(tokenToCommit)) for scope: \(scope.key)", sender: self)
     }
     
     /// Resets the current change token so that the next fetch operation will fetch all existing data
