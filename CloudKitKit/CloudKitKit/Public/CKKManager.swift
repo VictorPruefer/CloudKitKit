@@ -22,6 +22,10 @@ public class CKKManager {
         container = CKContainer.default()
     }
     
+    // MARK: - Public properties
+    
+    weak var delegate: CKKDelegate?
+    
     // MARK: - Public and static properties
     
     static var debugMode: Bool = false
@@ -102,7 +106,8 @@ extension CKKManager {
                 affectedZoneIDs.insert(zoneID)
             }
             operation.recordZoneWithIDWasDeletedBlock = { zoneID in
-                // TODO: Handle deleted zones
+                // Notify delegate to handle deleted zone
+                self.delegate?.recordZoneWithIDWasDeleted(zoneID: zoneID)
             }
             operation.changeTokenUpdatedBlock = { newToken in
                 // We now have a new change token locally, cache it without saving
@@ -117,7 +122,6 @@ extension CKKManager {
                 }
                 
                 // Fetch changes in zones that are affected
-                
                 CKKZoneHandler.shared.fetchChangesInZones(zoneIDs: Array(affectedZoneIDs), database: database, completionHandler: {
                     // Now that we have fetched the changes, cache the new change token of the database
                     CKKTokenHandler.shared.saveNewToken(newToken: newToken, scope: .database(scope: database), commit: true)

@@ -102,7 +102,10 @@ internal extension CKKZoneHandler {
                     return
                 }
                 // TODO: Handle changes, if completion successful -> Store new token
-                let zoneChanges = recordsToSave.filter({ $0.recordID.zoneID == recordZoneID })
+                // Filter zone changes of this zone and that are not deleted 
+                let zoneChanges = recordsToSave
+                    .filter({ $0.recordID.zoneID == recordZoneID })
+                    .filter({ record in !recordsToDelete.contains(where: { record.recordID == $0.0 }) })
             }
             operation.fetchRecordZoneChangesCompletionBlock = { error in
                 if let error = error {

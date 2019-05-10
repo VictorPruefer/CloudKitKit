@@ -20,6 +20,8 @@
 		1B936FAF227DEB6200E9D453 /* CKKConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B936FAE227DEB6200E9D453 /* CKKConstants.swift */; };
 		1B936FB4227F05E400E9D453 /* CKKZoneHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B936FB3227F05E400E9D453 /* CKKZoneHandler.swift */; };
 		1B936FB6227F2EA000E9D453 /* CKKTokenScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B936FB5227F2EA000E9D453 /* CKKTokenScope.swift */; };
+		1B936FB82286170500E9D453 /* CKKDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B936FB72286170500E9D453 /* CKKDelegate.swift */; };
+		1B936FBA2286183300E9D453 /* CKKRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B936FB92286183300E9D453 /* CKKRecord.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +40,8 @@
 		1B936FAE227DEB6200E9D453 /* CKKConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CKKConstants.swift; sourceTree = "<group>"; };
 		1B936FB3227F05E400E9D453 /* CKKZoneHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CKKZoneHandler.swift; sourceTree = "<group>"; };
 		1B936FB5227F2EA000E9D453 /* CKKTokenScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CKKTokenScope.swift; sourceTree = "<group>"; };
+		1B936FB72286170500E9D453 /* CKKDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CKKDelegate.swift; sourceTree = "<group>"; };
+		1B936FB92286183300E9D453 /* CKKRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CKKRecord.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +98,8 @@
 			children = (
 				1B936FA6227DDEB200E9D453 /* CKKManager.swift */,
 				1B936FAC227DE8D200E9D453 /* CKKConfiguration.swift */,
+				1B936FB92286183300E9D453 /* CKKRecord.swift */,
+				1B936FB72286170500E9D453 /* CKKDelegate.swift */,
 			);
 			path = Public;
 			sourceTree = "<group>";
@@ -197,8 +203,10 @@
 				1B936FAF227DEB6200E9D453 /* CKKConstants.swift in Sources */,
 				1B936FB6227F2EA000E9D453 /* CKKTokenScope.swift in Sources */,
 				1B936FA7227DDEB200E9D453 /* CKKManager.swift in Sources */,
+				1B936FBA2286183300E9D453 /* CKKRecord.swift in Sources */,
 				1B936F92227DCFBB00E9D453 /* ViewController.swift in Sources */,
 				1B936F90227DCFBB00E9D453 /* AppDelegate.swift in Sources */,
+				1B936FB82286170500E9D453 /* CKKDelegate.swift in Sources */,
 				1B936FA5227DDC1400E9D453 /* CKKSubscriptionHandler.swift in Sources */,
 				1B936FB4227F05E400E9D453 /* CKKZoneHandler.swift in Sources */,
 			);
