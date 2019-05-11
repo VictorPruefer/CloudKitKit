@@ -47,7 +47,7 @@ extension CKKManager {
     /// Specify a configuration and start the setup proceedure. This will create subscriptions, zones etc. if required.
     ///
     /// - Parameter configuration: The configuration to use.
-    func setup(with configuration: CKKConfiguration) {
+    func setup(with configuration: CKKConfiguration, completionHandler: ((CKKError?) -> Void)?) {
         CKKDebugging.debuggingCrumble(statement: "Start setup...", sender: self)
         
         self.configuration = configuration
@@ -56,6 +56,11 @@ extension CKKManager {
         container.accountStatus { (accountStatus, error) in
             if let error = error {
                 CKKDebugging.debuggingCrumble(statement: error.localizedDescription, sender: self)
+                if let ckerror = error as? CKError {
+                    completionHandler?(CKKError(cloudError: ckerror))
+                } else {
+                    completionHandler?(.unknown)
+                }
                 return
             }
             // Only continue if user is signed in
@@ -74,6 +79,7 @@ extension CKKManager {
             
             // Setup custom zone
             CKKZoneHandler.shared.setupCustomZone(zoneName: configuration.requiredZone, completionHandler: {
+                completionHandler?(nil)
                 // Fetch changes
                 self.fetchChanges(database: .private, completionHandler: {
                     CKKDebugging.debuggingCrumble(statement: "Finished fetching changes in private db", sender: self)

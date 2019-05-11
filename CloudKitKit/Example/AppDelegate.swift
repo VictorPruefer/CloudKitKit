@@ -18,9 +18,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
         CKKManager.debugMode = true
+        CKKManager.shared.delegate = self
+        CKKManager.shared.localDataManager = self
         
         let configuration = CKKConfiguration(customContainerID: nil, requiredDatabases: [.private], requiredZone: "Notes")
-        CKKManager.shared.setup(with: configuration)
+        CKKManager.shared.setup(with: configuration, completionHandler: { error in
+            print(error?.description ?? "Successful setup")
+        })
 
         application.registerForRemoteNotifications()
         
@@ -45,6 +49,34 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
     
+}
+
+extension AppDelegate: CKKDelegate {
+    
+    func recordZoneWithIDWasDeleted(zoneID: CKRecordZone.ID) {
+        print("record zone with id was deleted")
+    }
+    
+    func didStartFetchingChanges() {
+        print("Did start fetching changes")
+    }
+    
+    func didCompleteFetchingChanges() {
+        print("Did complete fetching changes")
+    }
     
 }
 
+extension AppDelegate: CKKLocalDataManager {
+    
+    func getRecordsToUpload() -> [CKKRecord] {
+        // Return all records where needsToBeUploaded == true
+        return []
+    }
+    
+    func handleCloudChanges(changedRecords: [CKRecord], deletedRecords: [(CKRecord.ID, CKRecord.RecordType)], completionHandler: (() -> Void)?) {
+        print("Handle cloud changes locally")
+        // TODO: Handle them and call completion handler
+    }
+    
+}

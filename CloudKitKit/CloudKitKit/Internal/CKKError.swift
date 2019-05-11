@@ -17,6 +17,7 @@ enum CKKError {
     case connectionFailure
     case userStorageTooSmall
     case cloudInternal
+    case failedAuthentication
     case unknown
     
     init(cloudError: CKError) {
@@ -33,6 +34,8 @@ enum CKKError {
             self = .cloudInternal
         case .quotaExceeded:
             self = .userStorageTooSmall
+        case .notAuthenticated, .managedAccountRestricted:
+            self = .failedAuthentication
         default:
             self = .unknown
         }
@@ -52,6 +55,8 @@ enum CKKError {
             return "Your iCloud storage is too small to save the data in the cloud."
         case .cloudInternal:
             return "An iCloud internal error occurred, please try again later."
+        case .failedAuthentication:
+            return "Authentication error. Are you sure you're logged in with a valid iCloud account?"
         case .unknown:
             return "An unknown error occurred, please try again later."
         }

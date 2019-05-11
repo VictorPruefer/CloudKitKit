@@ -59,7 +59,7 @@ internal extension CKKZoneHandler {
     ///   - zoneIDs: The IDs of the affected zones which changes should be handled
     ///   - database: The database of the affected zones
     ///   - completionHandler: The completion handler to be called after handling all changes
-    func fetchChangesInZones(zoneIDs: [CKRecordZone.ID], database: CKDatabase.Scope, completionHandler: @escaping () -> Void) {
+    func fetchChangesInZones(zoneIDs: [CKRecordZone.ID], database: CKDatabase.Scope, completionHandler:  (() -> Void)?) {
         CKKDebugging.debuggingCrumble(statement: "Fetch changes in \(zoneIDs.count) zones in \(database)", sender: self)
         
         // Only continue if there is at least one affected zone
@@ -99,10 +99,12 @@ internal extension CKKZoneHandler {
             operation.recordZoneFetchCompletionBlock = { recordZoneID, newToken, _, moreComing, error in
                 if let error = error {
                     CKKDebugging.debuggingCrumble(statement: error.localizedDescription, sender: self)
+                    if let ckerror = error as? CKError {
+                        let ckkerror = CKKError(cloudError: ckerror)
+                        CKKDebugging.debuggingCrumble(statement: ckkerror.description, sender: self)
+                    }
                     return
                 }
-                // TODO: Handle morecoming if result limit is exceeded
-                // TODO: Handle changes, if completion successful -> Store new token
                 // Filter zone changes so that only the ones in this zone and that are not deleted remain
                 let zoneChanges = recordsToSave
                     .filter({ $0.recordID.zoneID == recordZoneID })
@@ -112,7 +114,9 @@ internal extension CKKZoneHandler {
                 CKKManager.shared.localDataManager?.handleCloudChanges(changedRecords: zoneChanges, deletedRecords: zoneDeletions, completionHandler: {
                     CKKTokenHandler.shared.saveNewToken(newToken: newToken, scope: .zone(zoneID: recordZoneID), commit: true)
                     if moreComing {
-                        
+                        // Not all changes could be retrieved, create a new operation for this zone to fetch the remaining changes
+                        CKKDebugging.debuggingCrumble(statement: "More coming, create another zone fetch operation", sender: self)
+                        self.fetchChangesInZones(zoneIDs: [recordZoneID], database: database, completionHandler: nil)
                     }
                 })
             }
@@ -121,7 +125,7 @@ internal extension CKKZoneHandler {
                     CKKDebugging.debuggingCrumble(statement: error.localizedDescription, sender: self)
                     return
                 }
-                completionHandler()
+                completionHandler?()
             }
             
             return operation
