@@ -11,7 +11,9 @@ import CloudKit
 
 class CKKRecord {
     
-    /// Contains the metadata (ID, etc) of the record
+    /// To make it easier to query, the record name is an additional property of CKKRecord, even though it is already contained in the encoded system fields
+    var recordName: String?
+    /// Contains the metadata (ID, etc) of the record. If you queried a set of CKKRecords using recordName, use encodedSystemFields to make sure that the zoneID is the right one.
     var encodedSystemFields: Data?
     
     /// Takes a record and saves its metadata. This function only saves the metadata, not the custom fields.

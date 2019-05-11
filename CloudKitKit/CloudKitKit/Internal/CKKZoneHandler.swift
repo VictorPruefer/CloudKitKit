@@ -93,19 +93,28 @@ internal extension CKKZoneHandler {
                 recordsToDelete.append((recordID, recordType))
             }
             operation.recordZoneChangeTokensUpdatedBlock = { recordZoneID, newToken, recentClientToken in
-                // We now have a new change token locally, cache it without saving
-                CKKTokenHandler.shared.saveNewToken(newToken: newToken, scope: .zone(zoneID: recordZoneID), commit: false)
+                // We now have a new change token locally
+                CKKTokenHandler.shared.saveNewToken(newToken: newToken, scope: .zone(zoneID: recordZoneID), commit: true)
             }
             operation.recordZoneFetchCompletionBlock = { recordZoneID, newToken, _, moreComing, error in
                 if let error = error {
                     CKKDebugging.debuggingCrumble(statement: error.localizedDescription, sender: self)
                     return
                 }
+                // TODO: Handle morecoming if result limit is exceeded
                 // TODO: Handle changes, if completion successful -> Store new token
-                // Filter zone changes of this zone and that are not deleted 
+                // Filter zone changes so that only the ones in this zone and that are not deleted remain
                 let zoneChanges = recordsToSave
                     .filter({ $0.recordID.zoneID == recordZoneID })
                     .filter({ record in !recordsToDelete.contains(where: { record.recordID == $0.0 }) })
+                let zoneDeletions = recordsToDelete.filter({ $0.0 == recordZoneID })
+               
+                CKKManager.shared.localDataManager?.handleCloudChanges(changedRecords: zoneChanges, deletedRecords: zoneDeletions, completionHandler: {
+                    CKKTokenHandler.shared.saveNewToken(newToken: newToken, scope: .zone(zoneID: recordZoneID), commit: true)
+                    if moreComing {
+                        
+                    }
+                })
             }
             operation.fetchRecordZoneChangesCompletionBlock = { error in
                 if let error = error {

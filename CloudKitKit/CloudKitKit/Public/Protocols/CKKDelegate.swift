@@ -11,4 +11,6 @@ import CloudKit
 
 protocol CKKDelegate: class {
     func recordZoneWithIDWasDeleted(zoneID: CKRecordZone.ID)
+    func didStartFetchingChanges()
+    func didCompleteFetchingChanges()
 }

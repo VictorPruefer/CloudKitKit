@@ -25,6 +25,7 @@ public class CKKManager {
     // MARK: - Public properties
     
     weak var delegate: CKKDelegate?
+    weak var localDataManager: CKKLocalDataManager?
     
     // MARK: - Public and static properties
     
@@ -90,6 +91,8 @@ extension CKKManager {
     
     func fetchChanges(database: CKDatabase.Scope, completionHandler: (() -> Void)?) {
         CKKDebugging.debuggingCrumble(statement: "Fetch changes in \(database)...", sender: self)
+        // Notify the delegate
+        delegate?.didStartFetchingChanges()
         
         // Get currently saved change token of this device
         let currentChangeToken = CKKTokenHandler.shared.getLatestToken(for: .database(scope: database))
@@ -113,11 +116,25 @@ extension CKKManager {
                 // We now have a new change token locally, cache it without saving
                 CKKTokenHandler.shared.saveNewToken(newToken: newToken, scope: .database(scope: database), commit: false)
             }
-            operation.fetchDatabaseChangesCompletionBlock = { newToken, more, error in
-                // Will be executed when the fetch changes operation completed
+            operation.fetchDatabaseChangesCompletionBlock = { newToken, moreComing, error in
                 if let error = error {
-                    // TODO: Check if error is CKErrorChangeTokenExpired, in this case reset the cached token
-                    print(error.localizedDescription)
+                    CKKDebugging.debuggingCrumble(statement: error.localizedDescription, sender: self)
+                    // Notify the delegate
+                    self.delegate?.didCompleteFetchingChanges()
+                    
+                    // Check the error
+                    if let ckerror = error as? CKError {
+                        let ckkerror = CKKError(cloudError: ckerror)
+                        switch ckkerror {
+                        case .changeTokenExpired:
+                            // Fetch again from scratch by resetting the token and calling the function again
+                            CKKTokenHandler.shared.resetToken(scope: .database(scope: database))
+                            self.fetchChanges(database: database, completionHandler: completionHandler)
+                        default: break
+                        }
+                        CKKDebugging.debuggingCrumble(statement: ckkerror.description, sender: self)
+                    }
+                    
                     return
                 }
                 
@@ -125,7 +142,13 @@ extension CKKManager {
                 CKKZoneHandler.shared.fetchChangesInZones(zoneIDs: Array(affectedZoneIDs), database: database, completionHandler: {
                     // Now that we have fetched the changes, cache the new change token of the database
                     CKKTokenHandler.shared.saveNewToken(newToken: newToken, scope: .database(scope: database), commit: true)
-                    completionHandler?()
+                    if moreComing {
+                        self.fetchChanges(database: database, completionHandler: completionHandler)
+                    } else {
+                        // Notify the delegate
+                        self.delegate?.didCompleteFetchingChanges()
+                        completionHandler?()
+                    }
                 })
             }
             
