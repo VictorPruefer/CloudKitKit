@@ -23,7 +23,6 @@ internal class CKKZoneHandler {
 
 internal extension CKKZoneHandler {
     
-    
     /// Checks whether the custom zone has already been created. If not, creates a new zone, synchronously. Waits for the zone to be created in order to continue.
     ///
     /// - Parameters:
@@ -35,17 +34,17 @@ internal extension CKKZoneHandler {
             completionHandler()
             return
         }
-        CKKDebugging.debuggingCrumble(statement: "Setup custom zone...", sender: self)
+        CKKDebugging.debuggingCrumble(statement: "Setup custom zone \(zoneName)", sender: self)
         // Create a new zone operation and add it to private database
         let zoneID = CKRecordZone.ID(zoneName: zoneName, ownerName: CKCurrentUserDefaultName)
         let newZone = CKRecordZone(zoneID: zoneID)
         let createZoneOp = CKModifyRecordZonesOperation(recordZonesToSave: [newZone], recordZoneIDsToDelete: nil)
         createZoneOp.modifyRecordZonesCompletionBlock = { savedZones, deleted, error in
             if let error = error {
-                print(error.localizedDescription)
+                CKKDebugging.debuggingCrumble(statement: error.localizedDescription, sender: self)
                 return
             }
-            // Don't create zone again
+            // Don't create zone again next time
             NSUbiquitousKeyValueStore.default.set(true, forKey: CKKConstants.kCustomZoneCreated.rawValue)
             completionHandler()
         }
@@ -83,7 +82,6 @@ internal extension CKKZoneHandler {
         // Create an operation to fetch all changes in given zones
         let fetchZoneChangesOperation: CKFetchRecordZoneChangesOperation = {
             let operation = CKFetchRecordZoneChangesOperation(recordZoneIDs: zoneIDs, configurationsByRecordZoneID: optionsForZones)
-            
             operation.fetchAllChanges = true
             operation.qualityOfService = .utility
             operation.recordChangedBlock = { record in

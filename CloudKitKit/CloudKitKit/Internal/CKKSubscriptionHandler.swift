@@ -27,7 +27,7 @@ extension CKKSubscriptionHandler {
     func setupSubscriptions(databases: [CKDatabase.Scope]) {
         for scope in databases where scope != .public {
             let subscriptionID = scope == .private ? CKKConstants.kSubscriptionIDPrivateDB.rawValue : CKKConstants.kSubscriptionIDSharedDB.rawValue
-            CKKDebugging.debuggingCrumble(statement: "Setting up subscription (\(subscriptionID))...", sender: self)
+            CKKDebugging.debuggingCrumble(statement: "Setting up subscription: (\(subscriptionID))...", sender: self)
             // Check if setting up subscription is required
             guard (scope == .private && UserDefaults.standard.bool(forKey: subscriptionID) == false) ||
                 (scope == .shared && UserDefaults.standard.bool(forKey: subscriptionID) == false) else {
@@ -37,7 +37,7 @@ extension CKKSubscriptionHandler {
             let subscriptionOperation = createDatabaseSubscriptionOperation(subscriptionID: subscriptionID)
             subscriptionOperation.modifySubscriptionsCompletionBlock = { subscriptions, deletedIDs, error in
                 if let error = error {
-                    print(error.localizedDescription)
+                    CKKDebugging.debuggingCrumble(statement: error.localizedDescription, sender: self)
                     return
                 }
                 // Don't setup subscription next time

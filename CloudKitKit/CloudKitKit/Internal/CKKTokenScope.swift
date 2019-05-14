@@ -9,6 +9,7 @@
 import Foundation
 import CloudKit
 
+/// CKKTokenScope represents a scope for a token. The scope can either be a database in general, or a specific zone.
 internal enum CKKTokenScope {
     case database(scope: CKDatabase.Scope)
     case zone(zoneID: CKRecordZone.ID)

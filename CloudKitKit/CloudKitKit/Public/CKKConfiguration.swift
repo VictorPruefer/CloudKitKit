@@ -14,9 +14,7 @@ public struct CKKConfiguration {
     
     /// Specify whether you want to use a default container (```nil```) or a custom one
     var customContainerID: String?
-    /// Specify which databases to subscribe
-    var requiredDatabases: [CKDatabase.Scope]
     /// Specify which zones should be accessed and created if necessary
-    var requiredZone: String
+    var zoneName: String
     
 }

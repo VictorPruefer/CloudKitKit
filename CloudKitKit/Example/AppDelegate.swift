@@ -20,7 +20,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         CKKManager.debugMode = true
         CKKManager.shared.delegate = self
         
-        let configuration = CKKConfiguration(customContainerID: nil, requiredDatabases: [.private], requiredZone: "Notes")
+        let configuration = CKKConfiguration(customContainerID: nil, zoneName: "Notes")
         CKKManager.shared.setup(with: configuration, completionHandler: { error in
             print(error?.description ?? "Successful setup")
         })
@@ -32,7 +32,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     // Handling arriving remote notifications
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        self.handleIncomingNotification(userInfo: userInfo, completionHandler: completionHandler)
+        CKKManager.shared.handleIncomingNotification(userInfo: userInfo, completionHandler: completionHandler)
     }
     
 }
