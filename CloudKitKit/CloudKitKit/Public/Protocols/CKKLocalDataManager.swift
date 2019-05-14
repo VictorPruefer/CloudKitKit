@@ -12,4 +12,5 @@ import CloudKit
 protocol CKKLocalDataManager: class {
     func handleCloudChanges(changedRecords: [CKRecord], deletedRecords: [(CKRecord.ID, CKRecord.RecordType)], completionHandler: (() -> Void)?)
     func getRecordsToUpload() -> [CKKRecord]
+    func saveContext()
 }

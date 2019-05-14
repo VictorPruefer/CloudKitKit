@@ -14,7 +14,7 @@ internal class CKKSubscriptionHandler {
     // MARK: - Singleton
     
     /// Singleton instance of ```CKKSubscriptionHandler```
-    static var shared = CKKSubscriptionHandler()
+    static let shared = CKKSubscriptionHandler()
     
     // This class is not supposed to be instantiated
     private init() {}

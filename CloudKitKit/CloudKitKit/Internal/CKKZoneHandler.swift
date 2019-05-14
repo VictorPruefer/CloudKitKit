@@ -14,7 +14,7 @@ internal class CKKZoneHandler {
     // MARK: - Singleton
     
     /// Singleton instance of ```CKKZoneHandler```
-    static var shared = CKKZoneHandler()
+    static let shared = CKKZoneHandler()
     
     // This class is not supposed to be instantiated
     private init() {}

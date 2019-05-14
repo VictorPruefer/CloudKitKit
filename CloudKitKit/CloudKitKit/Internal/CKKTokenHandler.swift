@@ -15,7 +15,7 @@ internal class CKKTokenHandler {
     // MARK: - Singleton
     
     /// Singleton instance of ```CKKTokenHandler```
-    static var shared = CKKTokenHandler()
+    static let shared = CKKTokenHandler()
     
     // This class is not supposed to be instantiated
     private init() {}

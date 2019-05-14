@@ -6,7 +6,7 @@
 //  Copyright © 2019 ninelinesdesign. All rights reserved.
 //
 
-import Foundation
+import UIKit
 import CloudKit
 
 /// The core class of CloudKitKit. Use this class for setup and data management.
@@ -15,7 +15,7 @@ public class CKKManager {
     // MARK: - Singleton
     
     /// Singleton instance of ```CKKManager```
-    static var shared = CKKManager()
+    static let shared = CKKManager()
     
     // This class is not supposed to be instantiated
     private init() {
@@ -93,7 +93,27 @@ extension CKKManager {
     
 }
 
+// MARK: Handle notification and fetch changes
 extension CKKManager {
+    
+    /// Handles incoming push notifications and triggers fetching new data if necessary
+    func handleIncomingNotification(userInfo: [AnyHashable : Any], completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        let notification = CKNotification(fromRemoteNotificationDictionary: userInfo)
+        if notification?.subscriptionID == CKKConstants.kSubscriptionIDPrivateDB.rawValue {
+            CKKDebugging.debuggingCrumble(statement: "Incoming push notification: Private DB", sender: self)
+            // There are new changes in the private database to fetch
+            CKKManager.shared.fetchChanges(database: .private) {
+                completionHandler(UIBackgroundFetchResult.newData)
+            }
+        }
+        if notification?.subscriptionID == CKKConstants.kSubscriptionIDSharedDB.rawValue {
+            CKKDebugging.debuggingCrumble(statement: "Incoming push notification: Shared DB", sender: self)
+            // There are new changes in the shared database to fetch
+            CKKManager.shared.fetchChanges(database: .shared) {
+                completionHandler(UIBackgroundFetchResult.newData)
+            }
+        }
+    }
     
     func fetchChanges(database: CKDatabase.Scope, completionHandler: (() -> Void)?) {
         CKKDebugging.debuggingCrumble(statement: "Fetch changes in \(database)...", sender: self)
@@ -160,7 +180,6 @@ extension CKKManager {
             
             return operation
         }()
-        
         
         container.database(with: database).add(fetchChangesOp)
     }

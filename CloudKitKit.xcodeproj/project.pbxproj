@@ -24,6 +24,7 @@
 		1B936FB6227F2EA000E9D453 /* CKKTokenScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B936FB5227F2EA000E9D453 /* CKKTokenScope.swift */; };
 		1B936FB82286170500E9D453 /* CKKDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B936FB72286170500E9D453 /* CKKDelegate.swift */; };
 		1B936FBA2286183300E9D453 /* CKKRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B936FB92286183300E9D453 /* CKKRecord.swift */; };
+		1BA13C842287707800E488E5 /* CKKField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BA13C832287707800E488E5 /* CKKField.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +47,7 @@
 		1B936FB5227F2EA000E9D453 /* CKKTokenScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CKKTokenScope.swift; sourceTree = "<group>"; };
 		1B936FB72286170500E9D453 /* CKKDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CKKDelegate.swift; sourceTree = "<group>"; };
 		1B936FB92286183300E9D453 /* CKKRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CKKRecord.swift; sourceTree = "<group>"; };
+		1BA13C832287707800E488E5 /* CKKField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CKKField.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,8 +64,10 @@
 		1B2D27282286D63200CCE63D /* Protocols */ = {
 			isa = PBXGroup;
 			children = (
+				1B936FB92286183300E9D453 /* CKKRecord.swift */,
 				1B936FB72286170500E9D453 /* CKKDelegate.swift */,
 				1B2D272B2286E94100CCE63D /* CKKLocalDataManager.swift */,
+				1BA13C832287707800E488E5 /* CKKField.swift */,
 			);
 			path = Protocols;
 			sourceTree = "<group>";
@@ -111,7 +115,6 @@
 			children = (
 				1B936FA6227DDEB200E9D453 /* CKKManager.swift */,
 				1B936FAC227DE8D200E9D453 /* CKKConfiguration.swift */,
-				1B936FB92286183300E9D453 /* CKKRecord.swift */,
 				1B2D27282286D63200CCE63D /* Protocols */,
 			);
 			path = Public;
@@ -220,6 +223,7 @@
 				1B936FBA2286183300E9D453 /* CKKRecord.swift in Sources */,
 				1B936F92227DCFBB00E9D453 /* ViewController.swift in Sources */,
 				1B936F90227DCFBB00E9D453 /* AppDelegate.swift in Sources */,
+				1BA13C842287707800E488E5 /* CKKField.swift in Sources */,
 				1B936FB82286170500E9D453 /* CKKDelegate.swift in Sources */,
 				1B936FA5227DDC1400E9D453 /* CKKSubscriptionHandler.swift in Sources */,
 				1B2D272C2286E94100CCE63D /* CKKLocalDataManager.swift in Sources */,
