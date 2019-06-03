@@ -1,8 +1,8 @@
 //
-//  CKKRecord.swift
+//  ABCRecord.swift
 //  CloudKitKit
 //
-//  Created by Victor Prüfer on 10.05.19.
+//  Created by Victor Prüfer on 25.05.19.
 //  Copyright © 2019 ninelinesdesign. All rights reserved.
 //
 
@@ -19,7 +19,7 @@ import CoreData
  - ```encodedSystemFields``` (optional Data).
  These attributes need to be stored persistently in addition to your custom fields.
  */
-protocol CKKRecord: NSFetchRequestResult {
+protocol ABCRecord: NSFetchRequestResult {
     
     // MARK: Static properties
     
@@ -50,17 +50,18 @@ protocol CKKRecord: NSFetchRequestResult {
     func storeRecord(record: CKRecord)
     /// Creates a CKRecord out of a CKKRecord and returns it. If there are no metadata for a CKRecord, it returns nil.
     func getRecord() -> CKRecord?
-    
+    /*
     /// Returns all locally stored elements of this type, optionally using a given predicate
     static func getAllLocalElements(using predicate: NSPredicate?) -> [Self]
     /// Creates a new element and return it
     static func createNewElement() -> Self?
+    */
     /// Handle a changed CKRecord
     static func handle(changedRecord: CKRecord)
     
 }
 
-extension CKKRecord {
+extension ABCRecord {
     
     func storeRecord(record: CKRecord) {
         // Store metadata fields
@@ -90,7 +91,7 @@ extension CKKRecord {
     
 }
 
-extension CKKRecord {
+extension ABCRecord {
     
     /// Takes a record and saves its metadata. This function only saves the metadata, not the custom fields.
     private func encodeSystemFields(of record: CKRecord) {
@@ -111,38 +112,18 @@ extension CKKRecord {
     
 }
 
-extension CKKRecord {
-    
-    static func createNewElement() -> Self? {
-        guard let context = CKKLocalDBManager.shared.persistentContainer?.viewContext else {
-            return nil
-        }
-        return NSEntityDescription.insertNewObject(forEntityName: self.recordType, into: context) as? Self
-    }
-    
-    /// Returns all locally stored elements of this type, optionally using a given predicate
-    static func getAllLocalElements(using predicate: NSPredicate?) -> [Self] {
-        let request = NSFetchRequest<Self>(entityName: Self.recordType)
-        request.predicate = predicate
-        let result = (try? CKKLocalDBManager.shared.persistentContainer?.viewContext.fetch(request)) ?? []
-        return result
-    }
-
+extension ABCRecord {
+   
     static func handle(changedRecord: CKRecord) {
-        // Check if there is already an entry for the given record name
-        let existingEntries = getAllLocalElements(using: NSPredicate(format: "recordName = %@", changedRecord.recordID.recordName))
-        // Confirm that there is already a record stored and the record ID is identical
-        if let localCopy = existingEntries.first(where: { $0.getRecord()?.recordID == changedRecord.recordID }) {
-            // Update the existing record
-            // TODO: Handle the case where needsSync == TRUE
-            localCopy.storeRecord(record: changedRecord)
-        } else if let newElement = createNewElement() {
-            // Create a new local record for the given cloud-stored record
-            newElement.storeRecord(record: changedRecord)
-        } else {
-            // TODO: Handle fail
-        }
-        CKKLocalDBManager.shared.saveContext(completionHandler: nil)
+        CKKLocalDBManager.shared.handle(changedRecord: changedRecord, type: self)
+    }
+    
+}
+
+extension ABCRecord where Self: NSManagedObject {
+    
+    func getObjectID() -> NSManagedObjectID {
+        return self.objectID
     }
     
 }

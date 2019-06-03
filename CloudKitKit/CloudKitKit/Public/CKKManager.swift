@@ -38,7 +38,7 @@ public class CKKManager {
     
     // MARK: Instance members
     
-    private var configuration: CKKConfiguration?
+    private(set) var configuration: CKKConfiguration?
     
 }
 
@@ -49,7 +49,7 @@ extension CKKManager {
     ///
     /// - Parameter configuration: The configuration to use.
     func setup(with configuration: CKKConfiguration, completionHandler: ((CKKError?) -> Void)?) {
-        CKKDebugging.debuggingCrumble(statement: "Start setup...", sender: self)
+        CKKDebugging.debuggingCrumble(statement: "✋ Start setup...", sender: self)
         
         self.configuration = configuration
         
@@ -66,7 +66,7 @@ extension CKKManager {
             }
             // Only continue if user is signed in
             guard accountStatus == .available else {
-                CKKDebugging.debuggingCrumble(statement: "No user logged in", sender: self)
+                CKKDebugging.debuggingCrumble(statement: "🚨 No user logged in", sender: self)
                 return
             }
             
@@ -83,10 +83,10 @@ extension CKKManager {
                 completionHandler?(nil)
                 // Fetch changes
                 self.fetchChanges(database: .private, completionHandler: {
-                    CKKDebugging.debuggingCrumble(statement: "Finished fetching changes in private db", sender: self)
+                    CKKDebugging.debuggingCrumble(statement: "✅ Finished fetching changes in private db", sender: self)
                 })
                 self.fetchChanges(database: .shared, completionHandler: {
-                    CKKDebugging.debuggingCrumble(statement: "Finished fetching changes in shared db", sender: self)
+                    CKKDebugging.debuggingCrumble(statement: "✅ Finished fetching changes in shared db", sender: self)
                 })
                 // Upload changes
                 self.pushLocalChanges(completionHandler: nil)
@@ -103,14 +103,14 @@ extension CKKManager {
     func handleIncomingNotification(userInfo: [AnyHashable : Any], completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
         let notification = CKNotification(fromRemoteNotificationDictionary: userInfo)
         if notification?.subscriptionID == CKKConstants.kSubscriptionIDPrivateDB.rawValue {
-            CKKDebugging.debuggingCrumble(statement: "Incoming push notification for private DB", sender: self)
+            CKKDebugging.debuggingCrumble(statement: "ℹ️ Incoming push notification for private DB", sender: self)
             // There are new changes in the private database to fetch
             CKKManager.shared.fetchChanges(database: .private) {
                 completionHandler(UIBackgroundFetchResult.newData)
             }
         }
         if notification?.subscriptionID == CKKConstants.kSubscriptionIDSharedDB.rawValue {
-            CKKDebugging.debuggingCrumble(statement: "Incoming push notification for shared DB", sender: self)
+            CKKDebugging.debuggingCrumble(statement: "ℹ️ Incoming push notification for shared DB", sender: self)
             // There are new changes in the shared database to fetch
             CKKManager.shared.fetchChanges(database: .shared) {
                 completionHandler(UIBackgroundFetchResult.newData)
@@ -124,7 +124,7 @@ extension CKKManager {
     ///   - database: The database to inspect for changes
     ///   - completionHandler: The completion handler to execute after fetching the changes
     func fetchChanges(database: CKDatabase.Scope, completionHandler: (() -> Void)?) {
-        CKKDebugging.debuggingCrumble(statement: "Fetch changes in \(database)...", sender: self)
+        CKKDebugging.debuggingCrumble(statement: "✋ Fetch changes in \(database)...", sender: self)
         // Notify the delegate
         delegate?.didStartFetchingChanges()
         
@@ -184,6 +184,7 @@ extension CKKManager {
                         // Notify the delegate
                         self.delegate?.didCompleteFetchingChanges()
                         completionHandler?()
+                        CKKDebugging.debuggingCrumble(statement: "✅ Successfully fetched changes in \(database).", sender: self)
                     }
                 })
             }
@@ -199,15 +200,17 @@ extension CKKManager {
 // MARK: - Local -> Cloud (Push local changes to the cloud)
 extension CKKManager {
     
+    // TODO Add success bool to completion handler
     /// Triggers to update all local changes into the cloud
     ///
     /// - Parameter completionHandler: The completion handler to execute after uploading all records
     func pushLocalChanges(completionHandler: (() -> Void)?) {
-        guard let recordsToSync = localDataManager?.getRecordsToSync() else {
+        /*guard let recordsToSync = localDataManager?.getRecordsToSync() else {
             completionHandler?()
             return
-        }
-        pushLocalChanges(hierarchyLevel: 0, records: recordsToSync, completionHandler: completionHandler)
+        }*/
+        let recordsToBeSynced = CKKLocalDBManager.shared.getLocalElementsToSync()
+        pushLocalChanges(hierarchyLevel: 0, records: recordsToBeSynced, completionHandler: completionHandler)
     }
     
     // TODO: Handle deletions
@@ -218,13 +221,13 @@ extension CKKManager {
     ///   - hierarchyLevel: The priority to filter the remain records for and upload them
     ///   - records: The remaining records
     ///   - completionHandler: The completion handler to execute after all records have been synced
-    private func pushLocalChanges(hierarchyLevel: Int, records: [CKKRecord], completionHandler: (() -> Void)?) {
+    private func pushLocalChanges(hierarchyLevel: Int, records: [ABCRecord], completionHandler: (() -> Void)?) {
         CKKDebugging.debuggingCrumble(statement: "Sync local records with hierarchy level \(hierarchyLevel)", sender: self)
         
         // Specify a limitation on how many records can be transfered in one operation to avoid limit exceed errors
         let maxNumberOfRecords = 260
         // The records that should be proceeded within this round
-        var recordsToProceed = records.filter({ $0.hierarchyLevel == hierarchyLevel }).prefix(maxNumberOfRecords)
+        var recordsToProceed = records.filter({ type(of: $0).hierarchyLevel == hierarchyLevel }).prefix(maxNumberOfRecords)
         // Transform each CKKRecord into a CKRecord and store it in recordsToSave
         var transformedRecords = [CKRecord]()
         
@@ -236,7 +239,7 @@ extension CKKManager {
                 // Otherwise create a new record
                 let zoneID = CKRecordZone.ID(zoneName: configuration?.zoneName ?? "Unknown zone", ownerName: CKCurrentUserDefaultName)
                 let recordID = CKRecord.ID(recordName: UUID().uuidString, zoneID: zoneID)
-                var newRecord = CKRecord(recordType: record.recordType, recordID: recordID)
+                var newRecord = CKRecord(recordType: type(of: record).recordType, recordID: recordID)
                 addFieldsToRecord(record: &newRecord, fields: record.getCustomFields())
                 transformedRecords.append(newRecord)
             }
@@ -252,15 +255,15 @@ extension CKKManager {
                 CKKDebugging.debuggingCrumble(statement: error.localizedDescription, sender: self)
                 return
             }
-            CKKDebugging.debuggingCrumble(statement: "Successfully uploaded \(recordsToProceed.count) records", sender: self)
+            CKKDebugging.debuggingCrumble(statement: "✅ Successfully uploaded \(recordsToProceed.count) records", sender: self)
             
             // Update local status of uploaded records
             for i in 0..<recordsToProceed.count {
                 recordsToProceed[i].syncRequired = false
                 recordsToProceed[i].storeRecord(record: transformedRecords[i])
             }
-            self.localDataManager?.saveContext()
-            
+            CKKLocalDBManager.shared.saveContext(completionHandler: nil)
+
             if remainingRecords.count == 0 || hierarchyLevel > 100 {
                 // All records have been uploaded or something went wrong. Abort to avoid infinite loop.
                 completionHandler?()

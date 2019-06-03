@@ -66,13 +66,13 @@ extension CKKTokenHandler {
         } else if let changeTokenData = try? NSKeyedArchiver.archivedData(withRootObject: tokenToCommit, requiringSecureCoding: true) {
             UserDefaults.standard.set(changeTokenData, forKey: scope.key)
         }
-        CKKDebugging.debuggingCrumble(statement: "Commit new token (\(tokenToCommit)) for scope: \(scope.key)", sender: self)
+        CKKDebugging.debuggingCrumble(statement: "✅ Commit new token (\(tokenToCommit)) for scope: \(scope.key)", sender: self)
     }
     
     /// Resets the current change token so that the next fetch operation will fetch all existing data
     func resetToken(scope: CKKTokenScope) {
         UserDefaults.standard.set(nil, forKey: scope.key)
-        CKKDebugging.debuggingCrumble(statement: "Reset token for scope: \(scope.key)", sender: self)
+        CKKDebugging.debuggingCrumble(statement: "✅ Reset token for scope: \(scope.key)", sender: self)
     }
     
 }

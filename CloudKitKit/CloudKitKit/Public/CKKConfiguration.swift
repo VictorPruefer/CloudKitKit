@@ -16,5 +16,9 @@ public struct CKKConfiguration {
     var customContainerID: String?
     /// Specify which zones should be accessed and created if necessary
     var zoneName: String
+    /// The name of the container CoreData is supposed to use (usually equal to the app name)
+    var persistentContainerName: String
+    /// A list of all possible record types
+    var recordTypes: [ABCRecord.Type]
     
 }

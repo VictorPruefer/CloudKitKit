@@ -11,12 +11,18 @@ import CloudKit
 
 enum CKKError {
     
+    /// An error that occurs because the previous change token is too old. Set it to ```nil``` and try again.
     case changeTokenExpired
+    /// An error that is probably temporary, so fetch the CKErrorRetryAfterKey and retry after a delay
     case temporary
     case requestTooLarge
+    /// An error that occurs caused by a bad connection
     case connectionFailure
+    /// An error that occurs because the user's iCloud storage limit is exceeded (default: 5gb)
     case userStorageTooSmall
-    case cloudInternal
+    /// There is a fatal error that shouldn't occur (internal iCloud error, wrong arguments, no permission etc.)
+    case fatal
+    /// An error that occurs because the authentication was not successful
     case failedAuthentication
     case unknown
     
@@ -24,14 +30,14 @@ enum CKKError {
         switch cloudError.code {
         case .changeTokenExpired:
             self = .changeTokenExpired
-        case .requestRateLimited, .zoneBusy:
+        case .requestRateLimited, .zoneBusy, .serviceUnavailable:
             self = .temporary
         case .limitExceeded:
             self = .requestTooLarge
         case .networkFailure, .networkUnavailable, .serverResponseLost:
             self = .connectionFailure
-        case .internalError, .serviceUnavailable:
-            self = .cloudInternal
+        case .internalError, .serverRejectedRequest, .invalidArguments, .permissionFailure:
+            self = .fatal
         case .quotaExceeded:
             self = .userStorageTooSmall
         case .notAuthenticated, .managedAccountRestricted:
@@ -53,8 +59,8 @@ enum CKKError {
             return "There was a connection failure, please try again later."
         case .userStorageTooSmall:
             return "Your iCloud storage is too small to save the data in the cloud."
-        case .cloudInternal:
-            return "An iCloud internal error occurred, please try again later."
+        case .fatal:
+            return "A fatal iCloud error occurred, please try again later."
         case .failedAuthentication:
             return "Authentication error. Are you sure you're logged in with a valid iCloud account?"
         case .unknown:
